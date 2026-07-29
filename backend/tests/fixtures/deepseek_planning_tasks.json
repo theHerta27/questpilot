@@ -1,0 +1,12 @@
+[
+  {"id":"jason-skill1","query":"把伊阿宋的一技能从8级升到9级","expected_collection_nos":[254],"expected_goal_count":1,"requires_selection":false},
+  {"id":"jason-alias-skill2","query":"杰森二技能8到9","expected_collection_nos":[254],"expected_goal_count":1,"requires_selection":false},
+  {"id":"jason-skill3","query":"伊阿宋三技能当前8级，目标9级","expected_collection_nos":[254],"expected_goal_count":1,"requires_selection":false},
+  {"id":"molay-skill1","query":"雅克·德·莫莱一技能从7级升到8级","expected_collection_nos":[324],"expected_goal_count":1,"requires_selection":false},
+  {"id":"molay-alias-skill2","query":"莫莱二技能从7级强化至8级","expected_collection_nos":[324],"expected_goal_count":1,"requires_selection":false},
+  {"id":"archer-osakabehime","query":"弓刑部一技能从4级升到5级","expected_collection_nos":[262],"expected_goal_count":1,"requires_selection":false},
+  {"id":"water-osakabehime","query":"水刑部三技能4升5","expected_collection_nos":[262],"expected_goal_count":1,"requires_selection":false},
+  {"id":"multi-character","query":"伊阿宋一技能8到9，同时莫莱一技能7到8","expected_collection_nos":[254,324],"expected_goal_count":2,"requires_selection":false},
+  {"id":"ambiguous-osakabehime","query":"刑部姬一技能4到5","expected_collection_nos":[],"expected_goal_count":0,"requires_selection":true},
+  {"id":"typo-jason","query":"伊阿松一技能8到9","expected_collection_nos":[],"expected_goal_count":0,"requires_selection":true}
+]

@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import json
+
+import pytest
+
 from questpilot.data_pipeline import AtlasAdapter
-from questpilot.drop_rates import CommunityDropAdapter
+from questpilot.drop_rates import CommunityDropAdapter, load_manifest
 
 
 def test_atlas_skill_material_adapter_handles_level_rows():
@@ -125,3 +129,40 @@ def test_atlas_war_and_event_adapters_preserve_facts():
         "v1",
     )
     assert events[0]["started_at"] is not None
+
+
+def test_pinned_drop_manifest_is_valid():
+    manifest = load_manifest(
+        __import__("pathlib").Path(__file__).parents[1]
+        / "data"
+        / "drop-dataset-manifest.json"
+    )
+    assert manifest["upstream_commit"] in manifest["source_url"]
+    assert manifest["license_status"] == "unverified-local-only"
+    assert manifest["raw_distribution"] is False
+    assert len(manifest["selected_materials"]) == 4
+    assert len(manifest["allowed_quests"]) == 13
+    assert all(quest["quest_type"] == "free" for quest in manifest["allowed_quests"])
+
+
+def test_unverified_manifest_cannot_enable_raw_distribution(tmp_path):
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "source_url": (
+                    "https://example.test/"
+                    "1d18e73b5b970fcf193335f29c645f654a142c69/dropData.json"
+                ),
+                "upstream_commit": "1d18e73b5b970fcf193335f29c645f654a142c69",
+                "domus_version": "1",
+                "content_sha256": "e" * 64,
+                "generated_at": "2026-07-29T00:00:00Z",
+                "license_status": "unverified-local-only",
+                "raw_distribution": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="must not be redistributed"):
+        load_manifest(manifest_path)

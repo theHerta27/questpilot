@@ -11,7 +11,7 @@ import structlog
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from sqlalchemy.orm import Session
 
 from questpilot.agent_graph import PlanningGraph
@@ -19,6 +19,11 @@ from questpilot.agent_runtime import AgentRuntime
 from questpilot.config import get_settings
 from questpilot.database import SessionLocal, create_all, get_session
 from questpilot.domain_tools import build_tool_registry
+from questpilot.goal_parser import (
+    NaturalLanguageGoalParser,
+    build_character_resolution_registry,
+    build_goal_proposal_registry,
+)
 from questpilot.harness.context import ExecutionContext
 from questpilot.harness.events import CompositeEventSink, InMemoryEventSink
 from questpilot.harness.gateway import FakeModel, OpenAICompatibleGateway
@@ -34,6 +39,9 @@ from questpilot.schemas import (
     AgentQueryResponse,
     CharacterSummary,
     DataSourceStatus,
+    DropDatasetStatus,
+    GoalParseRequest,
+    GoalParseResponse,
     InventoryItemView,
     InventoryReplaceRequest,
     MaterialGapRequest,
@@ -178,6 +186,33 @@ def data_status(session: SessionDep) -> DataSourceStatus:
     return status
 
 
+@app.get("/api/v1/data/drop-dataset", response_model=DropDatasetStatus)
+def drop_dataset_status(session: SessionDep) -> DropDatasetStatus:
+    status = service(session).drop_dataset_status()
+    if not status:
+        raise HTTPException(status_code=404, detail="no published community drop dataset")
+    return status
+
+
+@app.get("/api/v1/assets/{kind}/{asset_id}.png")
+def local_asset(kind: str, asset_id: int):
+    directory = {"characters": "characters", "materials": "materials"}.get(kind)
+    if directory:
+        target = settings.data_dir / "assets" / directory / f"{asset_id}.png"
+        if target.is_file():
+            return FileResponse(target, media_type="image/png")
+    label = "QP" if kind == "quests" else "?"
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" '
+        'viewBox="0 0 96 96" role="img">'
+        '<rect width="96" height="96" rx="18" fill="#17213a"/>'
+        '<path d="M18 67L39 42l13 14 10-12 16 23H18z" fill="#d6b36a"/>'
+        f'<text x="48" y="31" text-anchor="middle" fill="#f7f0df" '
+        f'font-family="sans-serif" font-size="16">{label}</text></svg>'
+    )
+    return Response(content=svg, media_type="image/svg+xml")
+
+
 @app.get("/api/v1/characters/{character_id}/skill-costs", response_model=list[SkillCostItem])
 def skill_costs(
     character_id: int, session: SessionDep
@@ -239,6 +274,49 @@ async def agent_query(
         prompt_id="agent.system",
     )
     runtime = AgentRuntime(gateway, build_tool_registry(service(session)))
+    try:
+        result = await runtime.run(payload.query, context)
+    except Exception:
+        finish_run(session, run, None, "failed")
+        raise
+    finish_run(session, run, result.model_dump(mode="json"), "complete")
+    return result
+
+
+@app.post("/api/v1/agent/parse-goals", response_model=GoalParseResponse)
+async def parse_agent_goals(
+    payload: GoalParseRequest, session: SessionDep
+) -> GoalParseResponse:
+    gateway = (
+        OpenAICompatibleGateway(
+            base_url=settings.model_base_url,
+            api_key=settings.model_api_key,
+            model=settings.model_name,
+            thinking_enabled=settings.model_thinking_enabled,
+        )
+        if settings.model_provider != "fake" and settings.model_api_key
+        else FakeModel()
+    )
+    model_name = settings.model_name if settings.model_provider != "fake" else "fake"
+    context = ExecutionContext(
+        user_id=payload.user_id,
+        locale=payload.locale,
+        model_config={"provider": settings.model_provider, "model": model_name},
+        event_sink=event_sink,
+    )
+    run = begin_run(
+        session,
+        context,
+        user_id=payload.user_id,
+        input_json=payload.model_dump(mode="json"),
+        model_name=model_name,
+        prompt_id="goal-parser.system",
+    )
+    runtime = NaturalLanguageGoalParser(
+        gateway,
+        build_goal_proposal_registry(),
+        build_character_resolution_registry(service(session)),
+    )
     try:
         result = await runtime.run(payload.query, context)
     except Exception:

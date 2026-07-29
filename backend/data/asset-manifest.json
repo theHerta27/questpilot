@@ -1,0 +1,13 @@
+{
+  "permission_status": "user-confirmed-local-demo-portfolio",
+  "distribution_scope": "local demonstration and portfolio display",
+  "assets": [
+    {"kind": "character", "id": 254, "name": "伊阿宋", "source_url": "https://static.atlasacademy.io/CN/Faces/f_1038000.png", "local_path": "characters/254.png"},
+    {"kind": "character", "id": 262, "name": "刑部姬（Archer）", "source_url": "https://static.atlasacademy.io/CN/Faces/f_2036000.png", "local_path": "characters/262.png"},
+    {"kind": "character", "id": 324, "name": "雅克·德·莫莱", "source_url": "https://static.atlasacademy.io/CN/Faces/f_25010000.png", "local_path": "characters/324.png"},
+    {"kind": "material", "id": 6503, "name": "英雄之证", "source_url": "https://static.atlasacademy.io/CN/Items/6503.png", "local_path": "materials/6503.png"},
+    {"kind": "material", "id": 6534, "name": "振荡火药", "source_url": "https://static.atlasacademy.io/CN/Items/6534.png", "local_path": "materials/6534.png"},
+    {"kind": "material", "id": 6537, "name": "巨人的戒指", "source_url": "https://static.atlasacademy.io/CN/Items/6537.png", "local_path": "materials/6537.png"},
+    {"kind": "material", "id": 6542, "name": "真理之卵", "source_url": "https://static.atlasacademy.io/CN/Items/6542.png", "local_path": "materials/6542.png"}
+  ]
+}

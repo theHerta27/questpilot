@@ -15,7 +15,8 @@ const character: Character = {
   fetched_at: "2026-07-29T00:00:00Z",
   match_type: "exact_name",
   confidence: 1,
-  requires_selection: false
+  requires_selection: false,
+  image_url: "/api/v1/assets/characters/254.png"
 };
 
 describe("goal list", () => {

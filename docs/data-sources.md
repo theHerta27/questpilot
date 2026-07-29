@@ -13,11 +13,20 @@
 
 ## 社区掉落率
 
-候选文件为 Chaldea 数据仓库的 `dist/dropData.json` 和 `wiki/domus_aurea_drop_sheet.csv`，其上游说明来自 FGOアイテム効率劇場。
+当前首版文件为 Chaldea 数据仓库的 `dist/dropData.json`，其上游说明来自 FGOアイテム効率劇場。
 
 掉落率是社区观测数据，不属于 Atlas 事实。M3 只导入 10–20 个演示材料相关的永久自由关卡，排除活动、随机敌人与缺样本记录。版本清单必须固定仓库提交、`domusVer`、文件哈希与生成时间。
 
-`chaldea-data` 当前没有声明仓库级许可证，因此原始文件不得提交到公开仓库。导入前应完成许可审查。
+P1 固定版本清单：
+
+- 仓库提交：`1d18e73b5b970fcf193335f29c645f654a142c69`
+- 提交时间：`2026-07-29T15:01:19Z`
+- `domusVer`：`1779642278`
+- 文件 SHA-256：`e02dc69a9ef2e6a305d2e170effea43ba69b31e519d866160c3eead517caf50c`
+- 实测结构：96 个物品、402 个关卡、2,435 条非零掉落率记录
+- 许可状态：`unverified-local-only`
+
+固定提交的完整仓库树中没有 `LICENSE`、`LICENCE` 或 `COPYING` 文件，因此不能推断存在再分发许可。原始文件只保存在 gitignored 本地缓存，不提交、不打包、不通过 API 提供下载；公开仓库只保存 Adapter、版本清单和合成 Fixture。页面必须标记“本地验证数据，不随项目再分发”。
 
 ## Mooncell
 

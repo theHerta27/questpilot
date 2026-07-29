@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session, joinedload
 
 from questpilot.models import (
     Character,
+    DropDatasetVersion,
     Material,
+    QuestDropRate,
     SkillLevelCost,
     SourceSnapshot,
     UserMaterialInventory,
@@ -185,9 +187,10 @@ class GameRepository:
 
     def aggregate_requirements(
         self, goals: list[tuple[int, int, int, int]]
-    ) -> dict[int, tuple[str, int]]:
+    ) -> dict[int, tuple[str, int, int]]:
         totals: dict[int, int] = defaultdict(int)
         names: dict[int, str] = {}
+        game_ids: dict[int, int] = {}
         for character_id, skill_number, current_level, target_level in goals:
             rows = self.session.scalars(
                 select(SkillLevelCost)
@@ -202,4 +205,26 @@ class GameRepository:
             for row in rows:
                 totals[row.material_id] += row.amount
                 names[row.material_id] = row.material.name
-        return {material_id: (names[material_id], amount) for material_id, amount in totals.items()}
+                game_ids[row.material_id] = row.material.game_id
+        return {
+            material_id: (names[material_id], amount, game_ids[material_id])
+            for material_id, amount in totals.items()
+        }
+
+    def latest_drop_dataset(self) -> tuple[DropDatasetVersion, int] | None:
+        dataset = self.session.scalar(
+            select(DropDatasetVersion)
+            .options(joinedload(DropDatasetVersion.source))
+            .order_by(DropDatasetVersion.fetched_at.desc())
+        )
+        if not dataset:
+            return None
+        rate_count = int(
+            self.session.scalar(
+                select(func.count(QuestDropRate.id)).where(
+                    QuestDropRate.dataset_version_id == dataset.id
+                )
+            )
+            or 0
+        )
+        return dataset, rate_count

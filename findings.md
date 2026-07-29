@@ -1,5 +1,22 @@
 # 发现与决策
 
+## 2026-07-29：真实社区掉落率 P1
+
+- `chaldea-data` 主分支固定提交为 `1d18e73b5b970fcf193335f29c645f654a142c69`，提交时间 `2026-07-29T15:01:19Z`。
+- 固定仓库树中不存在 `LICENSE`、`LICENCE` 或 `COPYING` 文件；不能推断再分发许可。
+- `dist/dropData.json` 的 `domusVer=1779642278`，SHA-256 为 `e02dc69a9ef2e6a305d2e170effea43ba69b31e519d866160c3eead517caf50c`。
+- 当前 Adapter 实测得到 2,435 条非零记录，覆盖 96 种物品和 399 个关卡；所有记录都有样本数和 AP。
+- 决策：原始数据只进入 gitignored 本地缓存；清单标记 `unverified-local-only`，公开仓库只保留 Adapter、清单和合成 Fixture。
+
+## 2026-07-30：P3–P6 规划与验收结论
+
+- 真实发布子集覆盖 4 种材料、13 个永久自由关卡和 14 条非零掉率；实际最低样本数为 1,084，准入阈值为 100。
+- 规划器先生成确定性贪心基线，再运行有节点数/时间上限的 branch-and-bound；目标依次为最小期望 AP、较少刷取次数。
+- branch-and-bound 在 4 组小型问题上与穷举 Oracle 一致；一次实现缺陷经修复后通过，未触发“连续失败两次停止重写”规则。
+- 达到搜索限制时保留并验证 best-so-far，响应明确标记降级；模型不参与掉率、材料数量或路线数值优化。
+- DeepSeek 只通过 Gateway 产生结构化培养目标；实体解析仍通过 ToolRegistry，歧义或低置信度结果必须由用户选择。
+- 浏览器真实链路已确认从自然语言多目标进入缺口、资源约束、局部路线和 Trace；Trace 包含 `run.started`、`DeterministicPlanValidator` 与 `verification.completed`。
+
 ## 需求
 - 从零实现 M0–M6，Harness 从 M0 起渐进建设。
 - M1 的全部 Tool Calling 必须经过 ModelGateway、ToolRegistry、ExecutionContext 和统一事件。

@@ -1,7 +1,9 @@
 import type {
   Character,
   DataSourceStatus,
+  DropDatasetStatus,
   GapResult,
+  GoalParseResult,
   PlanResult,
   SkillGoal
 } from "./types";
@@ -27,6 +29,15 @@ export const api = {
   dataStatus() {
     return request<DataSourceStatus>("/api/v1/data/status");
   },
+  dropDatasetStatus() {
+    return request<DropDatasetStatus>("/api/v1/data/drop-dataset");
+  },
+  parseGoals(query: string) {
+    return request<GoalParseResult>("/api/v1/agent/parse-goals", {
+      method: "POST",
+      body: JSON.stringify({ query, user_id: "demo", locale: "zh-CN" })
+    });
+  },
   searchCharacters(query: string) {
     return request<Character[]>(
       `/api/v1/characters?query=${encodeURIComponent(query)}`
@@ -44,7 +55,14 @@ export const api = {
       body: JSON.stringify({ user_id: "demo", goals })
     });
   },
-  createPlan(goals: SkillGoal[], currentAp: number, apples: number) {
+  createPlan(
+    goals: SkillGoal[],
+    currentAp: number,
+    apples: number,
+    deadline: string,
+    dailyMinutes: number,
+    minutesPerRun: number
+  ) {
     return request<PlanResult>("/api/v1/plans", {
       method: "POST",
       body: JSON.stringify({
@@ -52,8 +70,9 @@ export const api = {
         goals,
         current_ap: currentAp,
         golden_apples: apples,
-        daily_minutes: 60,
-        minutes_per_run: 3
+        deadline: deadline ? new Date(deadline).toISOString() : null,
+        daily_minutes: dailyMinutes,
+        minutes_per_run: minutesPerRun
       })
     });
   },

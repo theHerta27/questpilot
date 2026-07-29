@@ -42,6 +42,7 @@ data/community/
 **/data/cache/
 **/data/snapshots/
 **/data/community/
+**/data/assets/
 reports/generated/
 
 # Editors and OS

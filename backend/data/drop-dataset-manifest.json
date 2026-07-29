@@ -1,0 +1,50 @@
+{
+  "source_url": "https://raw.githubusercontent.com/chaldea-center/chaldea-data/1d18e73b5b970fcf193335f29c645f654a142c69/dist/dropData.json",
+  "repository_url": "https://github.com/chaldea-center/chaldea-data",
+  "upstream_source_url": "https://sites.google.com/view/fgo-domus-aurea",
+  "upstream_commit": "1d18e73b5b970fcf193335f29c645f654a142c69",
+  "upstream_commit_time": "2026-07-29T15:01:19Z",
+  "domus_version": "1779642278",
+  "content_sha256": "e02dc69a9ef2e6a305d2e170effea43ba69b31e519d866160c3eead517caf50c",
+  "generated_at": "2026-07-29T15:28:12.1019536Z",
+  "license_status": "unverified-local-only",
+  "license_evidence": "No LICENSE, LICENCE, or COPYING file exists in the pinned repository tree.",
+  "raw_distribution": false,
+  "minimum_sample_runs": 100,
+  "selected_materials": [
+    {"game_id": 6503, "name": "英雄之证"},
+    {"game_id": 6534, "name": "振荡火药"},
+    {"game_id": 6537, "name": "巨人的戒指"},
+    {"game_id": 6542, "name": "真理之卵"}
+  ],
+  "allowed_quests": [
+    {"game_id": 93000109, "war_name": "第一特异点", "spot_name": "马赛", "ap_cost": 7, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93000301, "war_name": "第三特异点", "spot_name": "海盗船", "ap_cost": 12, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93000506, "war_name": "第五特异点", "spot_name": "达拉斯", "ap_cost": 17, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030202, "war_name": "Lostbelt No.1", "spot_name": "雅嘎·斯摩棱斯克", "ap_cost": 20, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030204, "war_name": "Lostbelt No.1", "spot_name": "反叛军的堡垒", "ap_cost": 21, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030206, "war_name": "Lostbelt No.1", "spot_name": "烧光的村庄", "ap_cost": 21, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030303, "war_name": "Lostbelt No.2", "spot_name": "巨人的花园", "ap_cost": 20, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030310, "war_name": "Lostbelt No.2", "spot_name": "北之境界", "ap_cost": 21, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030402, "war_name": "Lostbelt No.3", "spot_name": "邻村", "ap_cost": 20, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030504, "war_name": "Lostbelt No.4", "spot_name": "北之灵峰", "ap_cost": 21, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030506, "war_name": "Lostbelt No.4", "spot_name": "迪瓦尔", "ap_cost": 21, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93030509, "war_name": "Lostbelt No.4", "spot_name": "无穷之地", "ap_cost": 21, "quest_type": "free", "is_permanent": true, "is_random_enemy": false},
+    {"game_id": 93031012, "war_name": "Lostbelt No.6", "spot_name": "爱丁堡", "ap_cost": 22, "quest_type": "free", "is_permanent": true, "is_random_enemy": false}
+  ],
+  "allowed_quest_ids": [
+    93000109,
+    93000301,
+    93000506,
+    93030202,
+    93030204,
+    93030206,
+    93030303,
+    93030310,
+    93030402,
+    93030504,
+    93030506,
+    93030509,
+    93031012
+  ]
+}

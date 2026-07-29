@@ -4,6 +4,7 @@ from questpilot.repositories import GameRepository
 from questpilot.schemas import (
     CharacterSummary,
     DataSourceStatus,
+    DropDatasetStatus,
     InventoryItemView,
     InventoryReplaceRequest,
     MaterialGapItem,
@@ -37,6 +38,9 @@ class GameService:
                 match_type=match.match_type,
                 confidence=match.confidence,
                 requires_selection=multiple_candidates or match.match_type == "fuzzy",
+                image_url=(
+                    f"/api/v1/assets/characters/{match.character.collection_no}.png"
+                ),
             )
             for match in matches
         ]
@@ -57,6 +61,27 @@ class GameService:
             character_count=character_count,
             material_count=material_count,
             snapshot_count=snapshot_count,
+        )
+
+    def drop_dataset_status(self) -> DropDatasetStatus | None:
+        latest = self.repository.latest_drop_dataset()
+        if not latest:
+            return None
+        dataset, rate_count = latest
+        metadata = dataset.metadata_json or {}
+        return DropDatasetStatus(
+            source=dataset.source.name,
+            version=dataset.version,
+            upstream_commit=dataset.upstream_commit,
+            content_sha256=dataset.content_sha256,
+            fetched_at=dataset.fetched_at,
+            source_url=dataset.source.source_url,
+            license_status=dataset.source.license_status,
+            raw_distribution=bool(metadata.get("raw_distribution", False)),
+            material_count=int(metadata.get("material_count", 0)),
+            candidate_quest_count=int(metadata.get("candidate_quest_count", 0)),
+            rate_count=rate_count,
+            minimum_sample_runs=int(metadata.get("minimum_sample_runs", 0)),
         )
 
     def skill_costs(self, character_id: int) -> list[SkillCostItem]:
@@ -110,14 +135,16 @@ class GameService:
         requirements = self.repository.aggregate_requirements(goals)
         inventory = self.repository.inventory(request.user_id)
         items = []
-        for material_id, (name, required) in sorted(
+        for material_id, (name, required, game_id) in sorted(
             requirements.items(), key=lambda pair: pair[1][0]
         ):
             owned = inventory.get(material_id).quantity if material_id in inventory else 0
             items.append(
                 MaterialGapItem(
                     material_id=material_id,
+                    material_game_id=game_id,
                     material_name=name,
+                    image_url=f"/api/v1/assets/materials/{game_id}.png",
                     required=required,
                     owned=owned,
                     gap=max(required - owned, 0),

@@ -7,7 +7,9 @@ from langgraph.graph import END, StateGraph
 from questpilot.harness.context import ExecutionContext
 from questpilot.harness.persistence import CheckpointStore
 from questpilot.harness.policy import ContextBuilder, ExecutionBudget, ExecutionPolicy
+from questpilot.models import DropDatasetVersion, GeneratedPlan, QuestDropRate
 from questpilot.planner import LocalPlanner
+from questpilot.planning_validation import DeterministicPlanValidator
 from questpilot.schemas import MaterialGapRequest, PlanRequest, PlanResult
 from questpilot.services import GameService
 
@@ -22,8 +24,14 @@ class PlanState(TypedDict, total=False):
     gap: dict[str, Any]
     dataset_loaded: bool
     candidate_count: int
+    atlas_version: str | None
+    dataset_version: str | None
+    planner_version: str
+    candidate_filter: dict[str, Any]
     result: PlanResult
     route: str
+    validation_evidence: dict[str, Any]
+    validation_errors: list[str]
 
 
 class PlanningGraph:
@@ -182,30 +190,109 @@ class PlanningGraph:
         return {"gap": gap.model_dump(mode="json")}
 
     def load_drop_dataset(self, _: PlanState) -> PlanState:
-        from sqlalchemy import func, select
+        from sqlalchemy import select
 
-        from questpilot.models import DropDatasetVersion
-
-        count = self.planner.session.scalar(select(func.count()).select_from(DropDatasetVersion))
-        return {"dataset_loaded": bool(count)}
+        dataset = self.planner.session.scalar(
+            select(DropDatasetVersion).order_by(DropDatasetVersion.fetched_at.desc())
+        )
+        atlas = self.game_service.repository.latest_atlas_snapshot()
+        return {
+            "dataset_loaded": dataset is not None,
+            "dataset_version": dataset.version if dataset else None,
+            "atlas_version": (
+                atlas.upstream_hash or atlas.content_sha256[:12] if atlas else None
+            ),
+            "planner_version": "p3b-v1",
+        }
 
     def search_candidates(self, _: PlanState) -> PlanState:
         from sqlalchemy import func, select
 
-        from questpilot.models import QuestDropRate
-
-        count = self.planner.session.scalar(
-            select(func.count(func.distinct(QuestDropRate.quest_id)))
+        dataset = self.planner.session.scalar(
+            select(DropDatasetVersion).order_by(DropDatasetVersion.fetched_at.desc())
         )
-        return {"candidate_count": int(count or 0)}
+        count = (
+            self.planner.session.scalar(
+                select(func.count(func.distinct(QuestDropRate.quest_id))).where(
+                    QuestDropRate.dataset_version_id == dataset.id
+                )
+            )
+            if dataset
+            else 0
+        )
+        metadata = dataset.metadata_json if dataset else {}
+        return {
+            "candidate_count": int(count or 0),
+            "candidate_filter": {
+                "permanent_free_only": True,
+                "random_enemy_excluded": True,
+                "minimum_sample_runs": int(
+                    (metadata or {}).get("minimum_sample_runs", 0)
+                ),
+                "fixed_manifest_scope": True,
+            },
+        }
 
     def generate_plan(self, state: PlanState) -> PlanState:
         return {"result": self.planner.create(state["request"], state["context"])}
 
     def validate_plan(self, state: PlanState) -> PlanState:
+        from sqlalchemy import select
+
         result = state["result"]
-        route = "complete" if result.verified and result.status == "complete" else "fallback"
-        return {"route": route}
+        dataset = self.planner.session.scalar(
+            select(DropDatasetVersion).order_by(DropDatasetVersion.fetched_at.desc())
+        )
+        allowed_quest_ids = (
+            set(
+                self.planner.session.scalars(
+                    select(QuestDropRate.quest_id)
+                    .where(QuestDropRate.dataset_version_id == dataset.id)
+                    .distinct()
+                )
+            )
+            if dataset
+            else set()
+        )
+        context = state["context"]
+        context.emit(
+            "verification.started",
+            "DeterministicPlanValidator",
+            "started",
+            payload_summary={"plan_id": result.plan_id},
+        )
+        report = DeterministicPlanValidator().validate(
+            state["request"],
+            result,
+            allowed_quest_ids=allowed_quest_ids,
+            dataset_version=dataset.version if dataset else None,
+        )
+        if not report.valid:
+            result.verified = False
+            result.warnings.extend(f"验证失败：{error}" for error in report.errors)
+            row = self.planner.session.get(GeneratedPlan, result.plan_id)
+            if row:
+                row.result_json = result.model_dump(mode="json")
+                row.status = "validation_failed"
+                self.planner.session.commit()
+        context.emit(
+            "verification.completed" if report.valid else "verification.failed",
+            "DeterministicPlanValidator",
+            "completed" if report.valid else "failed",
+            payload_summary=report.evidence,
+            error=None if report.valid else {"errors": report.errors},
+            finished=True,
+        )
+        route = (
+            "complete"
+            if report.valid and result.verified and result.status == "complete"
+            else "fallback"
+        )
+        return {
+            "route": route,
+            "validation_evidence": report.evidence,
+            "validation_errors": report.errors,
+        }
 
     def fallback(self, state: PlanState) -> PlanState:
         result = state["result"]

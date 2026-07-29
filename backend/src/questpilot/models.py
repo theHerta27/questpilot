@@ -140,6 +140,8 @@ class GameQuest(Base):
     spot_name: Mapped[str] = mapped_column(String(200), default="")
     ap_cost: Mapped[int] = mapped_column(Integer, default=0)
     is_permanent: Mapped[bool] = mapped_column(Boolean, default=True)
+    quest_type: Mapped[str] = mapped_column(String(32), default="unknown")
+    flags_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     source_version: Mapped[str] = mapped_column(String(128))
 
 

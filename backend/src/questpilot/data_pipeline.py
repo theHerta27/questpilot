@@ -257,6 +257,8 @@ class AtlasAdapter:
                             "spot_name": spot_name,
                             "ap_cost": int(quest.get("consume") or quest.get("apCost") or 0),
                             "is_permanent": not bool(quest.get("eventId")),
+                            "quest_type": str(quest.get("type") or "unknown"),
+                            "flags_json": [str(flag) for flag in quest.get("flags") or []],
                             "source_version": source_version,
                         }
                     )
@@ -494,4 +496,16 @@ class AtlasPipeline:
             "characters": self.publish_characters(snapshots["nice_servant"]),
             "quests": self.publish_wars(snapshots["nice_war"]),
             "events": self.publish_events(snapshots["nice_event"]),
+        }
+
+    def sync_wars(self) -> dict[str, Any]:
+        upstream = self.client.info()
+        snapshot = self.fetch_snapshot(
+            "nice_war", "/export/CN/nice_war.json", upstream
+        )
+        return {
+            "version": upstream,
+            "quests": self.publish_wars(snapshot),
+            "snapshot_sha256": snapshot.content_sha256,
+            "fetched_at": snapshot.fetched_at.isoformat(),
         }

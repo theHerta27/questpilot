@@ -13,6 +13,7 @@ export interface Character {
   match_type: "exact_name" | "exact_alias" | "fuzzy";
   confidence: number;
   requires_selection: boolean;
+  image_url: string;
 }
 
 export interface DataSourceStatus {
@@ -35,9 +36,26 @@ export interface SkillGoal {
   target_level: number;
 }
 
+export interface DropDatasetStatus {
+  source: string;
+  version: string;
+  upstream_commit: string | null;
+  content_sha256: string;
+  fetched_at: string;
+  source_url: string;
+  license_status: string;
+  raw_distribution: boolean;
+  material_count: number;
+  candidate_quest_count: number;
+  rate_count: number;
+  minimum_sample_runs: number;
+}
+
 export interface GapItem {
   material_id: number;
+  material_game_id: number;
   material_name: string;
+  image_url: string;
   required: number;
   owned: number;
   gap: number;
@@ -62,6 +80,7 @@ export interface PlanResult {
     ap_cost: number;
     expected_drops: Record<string, number>;
     sample_runs: number;
+    image_url: string;
   }>;
   total_ap: number;
   available_ap: number;
@@ -71,4 +90,36 @@ export interface PlanResult {
   candidate_scope: string;
   warnings: string[];
   verified: boolean;
+  solver: string;
+  optimality: "local_optimal" | "best_so_far" | "feasible_baseline" | "partial_baseline" | "no_solution";
+  planner_version: string;
+  search_nodes: number;
+  search_limit_hit: boolean;
+  degraded: boolean;
+  dataset_fetched_at: string | null;
+  dataset_source_url: string | null;
+  dataset_license_status: string | null;
+  minimum_sample_runs: number | null;
+}
+
+export interface GoalParseResult {
+  run_id: string;
+  drafts: Array<{
+    character_query: string;
+    skill_number: number;
+    current_level: number;
+    target_level: number;
+  }>;
+  resolved_goals: Array<SkillGoal & { character: Character }>;
+  candidate_groups: Array<{
+    draft_index: number;
+    character_query: string;
+    skill_number: number;
+    current_level: number;
+    target_level: number;
+    candidates: Character[];
+  }>;
+  tool_steps: Array<{ name: string; status: string; summary: string }>;
+  explanation: string;
+  event_count: number;
 }
