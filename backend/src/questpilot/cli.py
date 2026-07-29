@@ -9,7 +9,7 @@ from questpilot.config import get_settings
 from questpilot.data_pipeline import AtlasClient, AtlasPipeline, SnapshotStore
 from questpilot.database import SessionLocal, create_all
 from questpilot.drop_rates import DropDatasetPublisher, load_manifest
-from questpilot.evaluation import EvaluationRunner, default_gap_cases
+from questpilot.evaluation import EvaluationRunner, default_material_gap_unit_cases
 from questpilot.seed import seed_demo
 
 
@@ -62,18 +62,19 @@ def drop_data() -> None:
 
 
 def evaluate() -> None:
-    parser = argparse.ArgumentParser(description="Run the versioned offline evaluation suite")
+    parser = argparse.ArgumentParser(description="Run the material-gap unit evaluation suite")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     report = EvaluationRunner().run(
-        default_gap_cases(),
+        default_material_gap_unit_cases(),
         lambda value: {"gap": max(value["required"] - value["owned"], 0)},
     )
-    report["suite_version"] = "gap-v1"
+    report["suite_name"] = "材料缺口单元评测"
+    report["suite_version"] = "material-gap-unit-v1"
     report["generated_at"] = datetime.now(UTC).isoformat()
     output = args.output or (
         Path("../reports/generated")
-        / f"evaluation-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}.json"
+        / f"material-gap-unit-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}.json"
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

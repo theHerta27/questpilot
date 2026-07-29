@@ -1,4 +1,10 @@
-import type { Character, GapResult, PlanResult, SkillGoal } from "./types";
+import type {
+  Character,
+  DataSourceStatus,
+  GapResult,
+  PlanResult,
+  SkillGoal
+} from "./types";
 
 const baseUrl = import.meta.env.VITE_API_URL ?? "";
 
@@ -7,9 +13,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(import.meta.env.VITE_API_KEY
-        ? { "X-API-Key": import.meta.env.VITE_API_KEY }
-        : {}),
       ...options?.headers
     }
   });
@@ -21,6 +24,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  dataStatus() {
+    return request<DataSourceStatus>("/api/v1/data/status");
+  },
   searchCharacters(query: string) {
     return request<Character[]>(
       `/api/v1/characters?query=${encodeURIComponent(query)}`

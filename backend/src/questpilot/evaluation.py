@@ -59,7 +59,7 @@ class EvaluationRunner:
         }
 
 
-def default_gap_cases() -> list[EvaluationCase]:
+def default_material_gap_unit_cases() -> list[EvaluationCase]:
     return [
         EvaluationCase(
             case_id=f"gap-{required:02d}-{owned:02d}",

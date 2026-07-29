@@ -68,6 +68,16 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .panel-heading { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.15rem; }
 .panel-heading h2 { margin: 0; color: #172554; font-size: 1rem; font-weight: 800; }
 .panel-heading p { margin: .18rem 0 0; color: #64748b; font-size: .78rem; }
+.source-proof {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .7rem;
+  margin: -.15rem 0 1rem; padding: .7rem .8rem;
+  color: #334155; border-left: 3px solid #0f766e; background: #f1f5f4;
+}
+.source-proof > svg { width: 18px; color: #0f766e; }
+.source-proof strong, .source-proof small { display: block; }
+.source-proof strong { font-size: .76rem; }
+.source-proof small { margin-top: .15rem; color: #64748b; font-size: .68rem; }
+.source-proof a { color: #0f766e; font-size: .72rem; font-weight: 800; }
 .step-index { display: grid; flex: 0 0 auto; width: 37px; height: 37px; place-items: center; color: #0f766e; font: 800 .75rem/1 "Bahnschrift", sans-serif; border: 1px solid #99d7ce; background: #ecfdf5; }
 .step-index svg { width: 17px; }
 .search-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .7rem; padding: .35rem .4rem .35rem .8rem; border: 1px solid #bcc4d0; background: white; }
@@ -85,12 +95,31 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .result-list small { margin-top: .15rem; color: #64748b; }
 .result-list svg { width: 17px; color: #94a3b8; }
 .rarity { color: #d97706; font-size: .75rem; letter-spacing: .08em; }
+.selection-note {
+  margin: .65rem 0 0; padding: .55rem .7rem;
+  color: #92400e; font-size: .73rem; border-left: 3px solid #f59e0b; background: #fffbeb;
+}
 .goal-grid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: .75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #bac2ce; }
 .selected-character { display: flex; flex-direction: column; }
 .selected-character strong { margin-top: .25rem; color: #172554; }
 .selected-character small { margin-top: .2rem; color: #64748b; }
 .goal-grid label, .form-grid label { display: grid; gap: .35rem; color: #64748b; font-size: .74rem; font-weight: 700; }
 .goal-grid input, .goal-grid select, .form-grid input, .standalone-input { width: 100%; min-height: 42px; padding: .55rem .65rem; color: #172033; border: 1px solid #cbd1da; background: white; }
+.goal-manifest { display: grid; gap: .4rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #d8dde3; }
+.manifest-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .2rem; }
+.manifest-heading strong { color: #172554; font-size: .8rem; }
+.manifest-heading small { color: #64748b; font-size: .68rem; }
+.manifest-row {
+  display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: .65rem;
+  padding: .62rem .7rem; border: 1px solid #e1e4e8; background: #fafafa;
+}
+.manifest-row strong, .manifest-row small { display: block; }
+.manifest-row strong { color: #172554; font-size: .8rem; }
+.manifest-row small { margin-top: .12rem; color: #64748b; font-size: .7rem; }
+.manifest-number { display: grid; height: 30px; place-items: center; color: #99f6e4; font: 700 .7rem "Bahnschrift", sans-serif; background: #172554; }
+.manifest-row button { display: grid; width: 34px; height: 34px; place-items: center; color: #64748b; border: 0; background: transparent; }
+.manifest-row button:hover { color: #c2410c; background: #fff7ed; }
+.manifest-row button svg { width: 16px; }
 .empty-state { display: grid; place-items: center; gap: .75rem; min-height: 125px; padding: 1rem; color: #64748b; text-align: center; border: 1px dashed #c4c9d0; background: #faf9f5; }
 .empty-state svg { width: 25px; color: #0f766e; }
 .empty-state p { max-width: 400px; margin: 0; font-size: .84rem; }
@@ -135,6 +164,9 @@ td { padding: .68rem .65rem; border-bottom: 1px solid #e4e5e7; }
   .route-rail li::after { left: calc(50% + 18px); right: calc(-50% + 18px); }
   .goal-grid { grid-template-columns: 1fr 1fr; }
   .selected-character { grid-column: 1 / -1; }
+  .source-proof { grid-template-columns: auto 1fr; }
+  .source-proof a { grid-column: 2; }
+  .manifest-heading { align-items: flex-start; flex-direction: column; gap: .2rem; }
   .header-chip { display: none; }
 }
 

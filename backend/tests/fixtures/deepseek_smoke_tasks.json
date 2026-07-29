@@ -1,0 +1,93 @@
+[
+  {
+    "id": "alias-jason-identity",
+    "query": "杰森是谁？请先核对角色，再简要回答。",
+    "required_tools": ["search_character"],
+    "expected_collection_nos": [254],
+    "answer_terms_any": ["伊阿宋"]
+  },
+  {
+    "id": "alias-archer-osakabehime-materials",
+    "query": "帮我查弓刑部三个技能的升级材料，不要猜数字。",
+    "required_tools": ["search_character", "get_skill_materials"],
+    "expected_collection_nos": [262],
+    "answer_terms_any": ["刑部姬", "材料"]
+  },
+  {
+    "id": "ambiguous-osakabehime",
+    "query": "刑部姬技能一升级要什么材料？",
+    "required_tools": ["search_character"],
+    "forbidden_tools": ["get_skill_materials", "calculate_material_gap"],
+    "expected_collection_nos": [189, 262],
+    "answer_terms_any": ["选择", "No.189", "No.262"]
+  },
+  {
+    "id": "molay-skill-materials",
+    "query": "雅克莫莱的一技能从1级升到4级需要哪些材料？",
+    "required_tools": ["search_character", "get_skill_materials"],
+    "expected_collection_nos": [324],
+    "answer_terms_any": ["祸骨", "愚者之锁", "大骑士勋章"]
+  },
+  {
+    "id": "jason-gap",
+    "query": "我没有库存，伊阿宋一技能从1级升到6级还缺什么？",
+    "required_tools": ["search_character", "calculate_material_gap"],
+    "expected_collection_nos": [254],
+    "minimum_goal_count": 1,
+    "answer_terms_any": ["缺口", "英雄之证", "剑之"]
+  },
+  {
+    "id": "molay-third-skill-gap",
+    "query": "莫莱三技能从1级升到3级，按当前库存算缺口。",
+    "required_tools": ["search_character", "calculate_material_gap"],
+    "expected_collection_nos": [324],
+    "minimum_goal_count": 1,
+    "answer_terms_any": ["祸骨", "愚者之锁", "缺"]
+  },
+  {
+    "id": "archer-osakabehime-level-range",
+    "query": "水刑部二技能4级升到6级分别要哪些材料？",
+    "required_tools": ["search_character", "get_skill_materials"],
+    "expected_collection_nos": [262],
+    "answer_terms_any": ["振荡火药", "弓之"]
+  },
+  {
+    "id": "multi-character-gap",
+    "query": "伊阿宋和雅克莫莱的一技能都从1级升到3级，合并算材料缺口。",
+    "required_tools": ["search_character", "calculate_material_gap"],
+    "expected_collection_nos": [254, 324],
+    "minimum_goal_count": 2,
+    "answer_terms_any": ["合计", "缺口", "材料"]
+  },
+  {
+    "id": "multi-skill-gap",
+    "query": "杰森的一技能和二技能都从1级升到4级，合并告诉我缺口。",
+    "required_tools": ["search_character", "calculate_material_gap"],
+    "expected_collection_nos": [254],
+    "minimum_goal_count": 2,
+    "answer_terms_any": ["缺口", "合计", "材料"]
+  },
+  {
+    "id": "low-confidence-typo",
+    "query": "伊阿松一技能升级材料是什么？",
+    "required_tools": ["search_character"],
+    "forbidden_tools": ["get_skill_materials", "calculate_material_gap"],
+    "expected_collection_nos": [254],
+    "answer_terms_any": ["选择", "确认", "No.254"]
+  },
+  {
+    "id": "alias-water-osakabehime",
+    "query": "水刑部是哪一名从者？",
+    "required_tools": ["search_character"],
+    "expected_collection_nos": [262],
+    "answer_terms_any": ["刑部姬", "Archer", "archer"]
+  },
+  {
+    "id": "multi-alias-gap",
+    "query": "杰森一技能1到3级，加上莫莱二技能1到3级，合并算当前库存缺口。",
+    "required_tools": ["search_character", "calculate_material_gap"],
+    "expected_collection_nos": [254, 324],
+    "minimum_goal_count": 2,
+    "answer_terms_any": ["缺口", "材料", "合并"]
+  }
+]

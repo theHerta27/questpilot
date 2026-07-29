@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from questpilot.repositories import GameRepository
 from questpilot.schemas import (
     InventoryItemInput,
@@ -60,3 +63,56 @@ def test_zero_length_goal_adds_no_cost(seeded_session):
         )
     )
     assert result.items == []
+
+
+def test_duplicate_skill_goals_are_fully_replaced_by_last_input(seeded_session):
+    repository = GameRepository(seeded_session)
+    character = repository.search_characters("阿尔托莉雅")[0]
+    service = GameService(repository)
+    merged = service.material_gap(
+        MaterialGapRequest(
+            goals=[
+                SkillGoal(
+                    character_id=character.id,
+                    skill_number=1,
+                    current_level=1,
+                    target_level=4,
+                ),
+                SkillGoal(
+                    character_id=character.id,
+                    skill_number=1,
+                    current_level=3,
+                    target_level=5,
+                ),
+            ]
+        )
+    )
+    direct = service.material_gap(
+        MaterialGapRequest(
+            goals=[
+                SkillGoal(
+                    character_id=character.id,
+                    skill_number=1,
+                    current_level=3,
+                    target_level=5,
+                )
+            ]
+        )
+    )
+    assert merged.goals == direct.goals
+    assert merged.items == direct.items
+    assert merged.verification_notes[0] == "同一角色与技能的重复目标以后一次输入完整覆盖"
+
+
+@pytest.mark.parametrize(
+    ("current_level", "target_level"),
+    [(0, 1), (1, 11), (6, 5)],
+)
+def test_skill_goal_rejects_invalid_level_ranges(current_level, target_level):
+    with pytest.raises(ValidationError):
+        SkillGoal(
+            character_id=1,
+            skill_number=1,
+            current_level=current_level,
+            target_level=target_level,
+        )

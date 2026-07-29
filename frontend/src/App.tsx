@@ -1,18 +1,30 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Boxes,
   ChevronRight,
   Database,
   Gauge,
+  Plus,
   Search,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Trash2
 } from "lucide-react";
 import { api } from "./api";
 import { RouteRail } from "./components/RouteRail";
 import { StatusPill } from "./components/StatusPill";
-import type { Character, GapResult, PlanResult, SkillGoal } from "./types";
+import {
+  type GoalEntry,
+  upsertGoalLastWins,
+  validateGoalLevels
+} from "./goalList";
+import type {
+  Character,
+  DataSourceStatus,
+  GapResult,
+  PlanResult
+} from "./types";
 
 type View = "mission" | "trace";
 
@@ -21,6 +33,7 @@ export default function App() {
   const [query, setQuery] = useState("阿尔托莉雅");
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selected, setSelected] = useState<Character | null>(null);
+  const [goals, setGoals] = useState<GoalEntry[]>([]);
   const [skill, setSkill] = useState(1);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [targetLevel, setTargetLevel] = useState(6);
@@ -33,17 +46,14 @@ export default function App() {
   const [trace, setTrace] = useState<Record<string, unknown> | null>(null);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [dataStatus, setDataStatus] = useState<DataSourceStatus | null>(null);
 
-  const goal: SkillGoal | null = selected
-    ? {
-        character_id: selected.id,
-        skill_number: skill,
-        current_level: currentLevel,
-        target_level: targetLevel
-      }
-    : null;
+  useEffect(() => {
+    api.dataStatus().then(setDataStatus).catch(() => setDataStatus(null));
+  }, []);
 
-  const activeStage = plan ? 4 : gap ? 3 : selected ? 1 : 0;
+  const goalPayload = goals.map(({ character: _character, ...goal }) => goal);
+  const activeStage = plan ? 4 : gap ? 3 : goals.length ? 1 : 0;
   const totalGap = useMemo(
     () => gap?.items.reduce((sum, item) => sum + item.gap, 0) ?? 0,
     [gap]
@@ -56,7 +66,11 @@ export default function App() {
     try {
       const result = await api.searchCharacters(query);
       setCharacters(result);
-      if (result.length === 1) setSelected(result[0]);
+      if (result.length === 1 && !result[0].requires_selection) {
+        setSelected(result[0]);
+      } else {
+        setSelected(null);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "角色查询失败");
     } finally {
@@ -64,8 +78,35 @@ export default function App() {
     }
   }
 
+  function addGoal() {
+    if (!selected) return;
+    try {
+      validateGoalLevels(currentLevel, targetLevel);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "技能等级不合法。");
+      return;
+    }
+    const next: GoalEntry = {
+      character: selected,
+      character_id: selected.id,
+      skill_number: skill,
+      current_level: currentLevel,
+      target_level: targetLevel
+    };
+    setGoals((current) => upsertGoalLastWins(current, next));
+    setGap(null);
+    setPlan(null);
+    setError("");
+  }
+
+  function removeGoal(index: number) {
+    setGoals((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    setGap(null);
+    setPlan(null);
+  }
+
   async function calculate() {
-    if (!goal) return;
+    if (!goalPayload.length) return;
     setBusy("gap");
     setError("");
     try {
@@ -75,7 +116,7 @@ export default function App() {
           quantity
         }))
       );
-      const result = await api.calculateGap([goal]);
+      const result = await api.calculateGap(goalPayload);
       setGap(result);
       setPlan(null);
     } catch (cause) {
@@ -86,11 +127,11 @@ export default function App() {
   }
 
   async function createPlan() {
-    if (!goal) return;
+    if (!goalPayload.length) return;
     setBusy("plan");
     setError("");
     try {
-      const result = await api.createPlan([goal], currentAp, apples);
+      const result = await api.createPlan(goalPayload, currentAp, apples);
       setPlan(result);
       setTraceRunId(result.run_id);
     } catch (cause) {
@@ -131,7 +172,10 @@ export default function App() {
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="header-chip"><Database aria-hidden /> Atlas CN</span>
+              <span className="header-chip">
+                <Database aria-hidden />
+                Atlas CN {dataStatus ? `· ${dataStatus.version}` : ""}
+              </span>
               <span className="header-chip"><ShieldCheck aria-hidden /> 可验证模式</span>
             </div>
           </div>
@@ -166,6 +210,19 @@ export default function App() {
                   <span className="step-index">01</span>
                   <div><h2>锁定培养目标</h2><p>中文名、日文名与别名统一解析</p></div>
                 </div>
+                {dataStatus && (
+                  <div className="source-proof">
+                    <Database aria-hidden />
+                    <span>
+                      <strong>{dataStatus.source} · {dataStatus.region}</strong>
+                      <small>
+                        版本 {dataStatus.version} · dataVer {dataStatus.data_ver ?? "—"} ·
+                        更新 {new Date(dataStatus.fetched_at).toLocaleString("zh-CN")}
+                      </small>
+                    </span>
+                    <a href={dataStatus.source_url} target="_blank" rel="noreferrer">查看来源</a>
+                  </div>
+                )}
                 <form className="search-row" onSubmit={handleSearch}>
                   <label className="sr-only" htmlFor="character-query">角色名称</label>
                   <Search aria-hidden />
@@ -183,22 +240,63 @@ export default function App() {
                         onClick={() => { setSelected(character); setGap(null); setPlan(null); }}
                       >
                         <span className="rarity">{"★".repeat(character.rarity)}</span>
-                        <span><strong>{character.name_zh_cn}</strong><small>{character.class_name} · No.{character.collection_no}</small></span>
+                        <span>
+                          <strong>{character.name_zh_cn}</strong>
+                          <small>
+                            {character.class_name} · No.{character.collection_no} ·{" "}
+                            {character.match_type === "exact_name"
+                              ? "精确名称"
+                              : character.match_type === "exact_alias"
+                                ? "别名命中"
+                                : `模糊候选 ${Math.round(character.confidence * 100)}%`}
+                          </small>
+                        </span>
                         <ChevronRight aria-hidden />
                       </button>
                     ))}
                   </div>
                 )}
+                {characters.some((character) => character.requires_selection) && (
+                  <p className="selection-note">存在同名或低置信度候选，请明确选择后再加入目标。</p>
+                )}
                 {selected && (
-                  <div className="goal-grid">
-                    <div className="selected-character">
-                      <span className="eyebrow">当前目标</span>
-                      <strong>{selected.name_zh_cn}</strong>
-                      <small>{selected.aliases.join(" · ") || selected.name_ja}</small>
+                  <>
+                    <div className="goal-grid">
+                      <div className="selected-character">
+                        <span className="eyebrow">待加入目标</span>
+                        <strong>{selected.name_zh_cn}</strong>
+                        <small>{selected.aliases.join(" · ") || selected.name_ja}</small>
+                      </div>
+                      <label>技能<select value={skill} onChange={(e) => setSkill(Number(e.target.value))}><option value={1}>技能一</option><option value={2}>技能二</option><option value={3}>技能三</option></select></label>
+                      <label>当前等级<input type="number" min={1} max={10} value={currentLevel} onChange={(e) => setCurrentLevel(Number(e.target.value))} /></label>
+                      <label>目标等级<input type="number" min={currentLevel} max={10} value={targetLevel} onChange={(e) => setTargetLevel(Number(e.target.value))} /></label>
                     </div>
-                    <label>技能<select value={skill} onChange={(e) => setSkill(Number(e.target.value))}><option value={1}>技能一</option><option value={2}>技能二</option><option value={3}>技能三</option></select></label>
-                    <label>当前等级<input type="number" min={1} max={10} value={currentLevel} onChange={(e) => setCurrentLevel(Number(e.target.value))} /></label>
-                    <label>目标等级<input type="number" min={currentLevel} max={10} value={targetLevel} onChange={(e) => setTargetLevel(Number(e.target.value))} /></label>
+                    <button className="secondary-button mt-4" onClick={addGoal}>
+                      <Plus aria-hidden />加入目标清单
+                    </button>
+                  </>
+                )}
+                {goals.length > 0 && (
+                  <div className="goal-manifest" aria-label="培养目标清单">
+                    <div className="manifest-heading">
+                      <strong>已编成 {goals.length} 项培养目标</strong>
+                      <small>同角色同技能以后一次输入完整覆盖</small>
+                    </div>
+                    {goals.map((item, index) => (
+                      <div className="manifest-row" key={`${item.character_id}-${item.skill_number}`}>
+                        <span className="manifest-number">{String(index + 1).padStart(2, "0")}</span>
+                        <span>
+                          <strong>{item.character.name_zh_cn}</strong>
+                          <small>技能 {item.skill_number} · {item.current_level} → {item.target_level}</small>
+                        </span>
+                        <button
+                          aria-label={`删除 ${item.character.name_zh_cn} 技能 ${item.skill_number}`}
+                          onClick={() => removeGoal(index)}
+                        >
+                          <Trash2 aria-hidden />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -231,16 +329,16 @@ export default function App() {
                 ) : (
                   <div className="empty-state"><Gauge aria-hidden /><p>选择角色与技能等级后，生成第一份确定性缺口清单。</p></div>
                 )}
-                {!gap && <button className="primary-button mt-5 w-full justify-center" disabled={!selected || busy === "gap"} onClick={calculate}>{busy === "gap" ? "正在复核…" : "计算材料缺口"}</button>}
+                {!gap && <button className="primary-button mt-5 w-full justify-center" disabled={!goals.length || busy === "gap"} onClick={calculate}>{busy === "gap" ? "正在复核…" : "合并计算材料缺口"}</button>}
               </div>
             </section>
 
             <aside className="space-y-6">
               <div className="mission-summary">
                 <p className="eyebrow text-teal-700">MISSION BRIEF</p>
-                <h2>{selected ? selected.name_zh_cn : "等待选择目标"}</h2>
+                <h2>{goals.length ? `${goals[0].character.name_zh_cn}${goals.length > 1 ? ` 等 ${goals.length} 项` : ""}` : "等待编成目标"}</h2>
                 <div className="summary-metrics">
-                  <span><small>技能目标</small><strong>{selected ? `${currentLevel} → ${targetLevel}` : "—"}</strong></span>
+                  <span><small>技能目标</small><strong>{goals.length || "—"}</strong></span>
                   <span><small>材料缺口</small><strong>{gap ? totalGap : "—"}</strong></span>
                   <span><small>验证状态</small><strong>{gap?.verified ? "通过" : "待计算"}</strong></span>
                 </div>

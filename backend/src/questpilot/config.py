@@ -18,11 +18,12 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_api_key: str = ""
     database_url: str = "sqlite+pysqlite:///./questpilot.db"
-    cors_origins: str = "http://localhost:5173"
+    cors_origins: str = "http://127.0.0.1:5173,http://localhost:5173"
     model_provider: str = "fake"
     model_base_url: str = "https://api.openai.com/v1"
     model_api_key: str = ""
     model_name: str = "gpt-4.1-mini"
+    model_thinking_enabled: bool = False
     model_fallbacks: str = ""
     atlas_base_url: str = "https://api.atlasacademy.io"
     data_dir: Path = Field(default=Path("./data"))

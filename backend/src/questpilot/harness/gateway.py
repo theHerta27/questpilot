@@ -14,9 +14,10 @@ from questpilot.harness.context import ExecutionContext
 
 class ModelMessage(BaseModel):
     role: str
-    content: str
+    content: str | None = None
     name: str | None = None
     tool_call_id: str | None = None
+    tool_calls: list[dict[str, Any]] | None = None
 
 
 class ModelToolCall(BaseModel):
@@ -115,11 +116,28 @@ class OpenAICompatibleGateway(ModelGateway):
         api_key: str,
         model: str,
         timeout_seconds: float = 60,
+        thinking_enabled: bool | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
         self.timeout_seconds = timeout_seconds
+        self.thinking_enabled = thinking_enabled
+
+    def build_payload(self, request: ModelRequest) -> dict[str, Any]:
+        model_name = request.model or self.model
+        payload: dict[str, Any] = {
+            "model": model_name,
+            "messages": [message.model_dump(exclude_none=True) for message in request.messages],
+            "temperature": request.temperature,
+        }
+        if self.thinking_enabled is not None:
+            payload["thinking"] = {
+                "type": "enabled" if self.thinking_enabled else "disabled"
+            }
+        if request.tools:
+            payload["tools"] = request.tools
+        return payload
 
     async def invoke(self, request: ModelRequest, context: ExecutionContext) -> ModelResponse:
         model_name = request.model or self.model
@@ -132,13 +150,7 @@ class OpenAICompatibleGateway(ModelGateway):
                 "tool_count": len(request.tools),
             },
         )
-        payload: dict[str, Any] = {
-            "model": model_name,
-            "messages": [message.model_dump(exclude_none=True) for message in request.messages],
-            "temperature": request.temperature,
-        }
-        if request.tools:
-            payload["tools"] = request.tools
+        payload = self.build_payload(request)
         headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
         try:
             async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:

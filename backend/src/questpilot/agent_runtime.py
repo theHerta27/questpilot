@@ -11,7 +11,9 @@ from questpilot.harness.tools import ToolRegistry
 from questpilot.schemas import AgentQueryResponse
 
 SYSTEM_PROMPT = """你是 QuestPilot。精确游戏事实与材料数量必须通过工具获取。
-禁止口算或猜测材料数量。信息不足时先调用查询工具，最终用简洁中文解释结果。"""
+禁止口算或猜测材料数量。角色必须先通过 search_character 解析，再使用返回的内部 ID。
+查询结果要求用户选择时，不得自行挑选角色。材料需求使用 get_skill_materials；
+包含库存或“缺口”的请求使用 calculate_material_gap。最终用简洁中文解释工具结果。"""
 
 
 class AgentRuntime:
@@ -70,10 +72,20 @@ class AgentRuntime:
                 messages.append(
                     ModelMessage(
                         role="assistant",
-                        content=json.dumps(
-                            [call.model_dump(mode="json") for call in response.tool_calls],
-                            ensure_ascii=False,
-                        ),
+                        content=response.text or None,
+                        tool_calls=[
+                            {
+                                "id": call.id,
+                                "type": "function",
+                                "function": {
+                                    "name": call.name,
+                                    "arguments": json.dumps(
+                                        call.arguments, ensure_ascii=False
+                                    ),
+                                },
+                            }
+                            for call in response.tool_calls
+                        ],
                     )
                 )
                 for call in response.tool_calls:
@@ -96,6 +108,53 @@ class AgentRuntime:
                             content=json.dumps(item["result"], ensure_ascii=False),
                         )
                     )
+                    if call.name == "search_character":
+                        candidates = item["result"].get("characters") or []
+                        if any(candidate.get("requires_selection") for candidate in candidates):
+                            choices = "；".join(
+                                (
+                                    f"{candidate['name_zh_cn']} "
+                                    f"({candidate['class_name']}, "
+                                    f"No.{candidate['collection_no']})"
+                                )
+                                for candidate in candidates
+                            )
+                            answer = (
+                                f"找到需要确认的角色候选：{choices}。"
+                                "请明确选择后，我再查询材料或计算缺口。"
+                            )
+                            context.emit(
+                                "verification.completed",
+                                "entity_resolution",
+                                "requires_selection",
+                                payload_summary={
+                                    "candidate_count": len(candidates),
+                                    "collection_numbers": [
+                                        candidate["collection_no"]
+                                        for candidate in candidates
+                                    ],
+                                },
+                                finished=True,
+                            )
+                            context.emit(
+                                "run.completed",
+                                "AgentRuntime",
+                                "completed",
+                                payload_summary={
+                                    "tool_result_count": len(tool_results),
+                                    "requires_selection": True,
+                                    "budget": budget.snapshot(),
+                                },
+                                finished=True,
+                            )
+                            return AgentQueryResponse(
+                                run_id=context.run_id,
+                                answer=answer,
+                                tool_results=tool_results,
+                                event_count=len(
+                                    context.event_sink.events_for(context.run_id)
+                                ),
+                            )
         except (BudgetExceeded, LoopDetected) as exc:
             context.emit(
                 "run.failed",

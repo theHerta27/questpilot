@@ -11,6 +11,7 @@ import httpx
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from questpilot.character_aliases import CURATED_CHARACTER_ALIASES
 from questpilot.models import (
     Character,
     CharacterAlias,
@@ -117,7 +118,9 @@ class SnapshotStore:
 
 class AtlasAdapter:
     @staticmethod
-    def character_row(raw: dict[str, Any], source_version: str) -> dict[str, Any]:
+    def character_row(
+        raw: dict[str, Any], source_version: str, fetched_at: datetime | None = None
+    ) -> dict[str, Any]:
         return {
             "game_id": int(raw["id"]),
             "collection_no": int(raw["collectionNo"]),
@@ -127,6 +130,7 @@ class AtlasAdapter:
             "class_name": str(raw.get("className") or raw.get("classId") or "unknown"),
             "source": "atlas",
             "source_version": source_version,
+            "fetched_at": fetched_at or datetime.now(UTC),
         }
 
     @staticmethod
@@ -149,6 +153,39 @@ class AtlasAdapter:
     def skill_cost_rows(raw: dict[str, Any]) -> list[dict[str, int]]:
         """Normalize Atlas variants into one row per level and item."""
         source = raw.get("skillMaterials") or raw.get("skill_materials") or {}
+        # Current Atlas nice servant payloads expose one shared active-skill
+        # material table keyed by the starting level ("1" means 1 -> 2).
+        # Every one of the servant's three active skills uses that table.
+        if (
+            isinstance(source, dict)
+            and source
+            and all(
+                isinstance(value, dict) and isinstance(value.get("items"), list)
+                for value in source.values()
+            )
+        ):
+            rows: list[dict[str, int]] = []
+            for from_level_text, level in source.items():
+                if not str(from_level_text).isdigit():
+                    continue
+                from_level = int(from_level_text)
+                for entry in level.get("items") or []:
+                    item = entry.get("item") or {}
+                    item_id = entry.get("itemId") or entry.get("id") or item.get("id")
+                    amount = entry.get("amount") or entry.get("count") or 0
+                    if item_id and amount:
+                        for skill_number in (1, 2, 3):
+                            rows.append(
+                                {
+                                    "skill_number": skill_number,
+                                    "from_level": from_level,
+                                    "to_level": from_level + 1,
+                                    "material_game_id": int(item_id),
+                                    "amount": int(amount),
+                                }
+                            )
+            return rows
+
         blocks: list[tuple[int, Any]] = []
         if isinstance(source, dict):
             blocks = [(int(key), value) for key, value in source.items() if str(key).isdigit()]
@@ -294,13 +331,15 @@ class AtlasPipeline:
     def publish_character(self, snapshot: SourceSnapshot) -> Character:
         raw = json.loads(Path(snapshot.local_path).read_bytes())
         version = snapshot.upstream_hash or snapshot.content_sha256[:12]
-        character = self._upsert_character(raw, version)
+        character = self._upsert_character(raw, version, snapshot.fetched_at)
         snapshot.published = True
         self.session.commit()
         return character
 
-    def _upsert_character(self, raw: dict[str, Any], version: str) -> Character:
-        row = AtlasAdapter.character_row(raw, version)
+    def _upsert_character(
+        self, raw: dict[str, Any], version: str, fetched_at: datetime
+    ) -> Character:
+        row = AtlasAdapter.character_row(raw, version, fetched_at)
         character = self.session.scalar(
             select(Character).where(Character.collection_no == row["collection_no"])
         )
@@ -331,7 +370,12 @@ class AtlasPipeline:
             self.session.add(
                 SkillLevelCost(character_id=character.id, material_id=material.id, **cost)
             )
-        for alias in {raw.get("name"), raw.get("originalName")}:
+        aliases = {
+            raw.get("name"),
+            raw.get("originalName"),
+            *CURATED_CHARACTER_ALIASES.get(character.collection_no, ()),
+        }
+        for alias in aliases:
             if alias and not self.session.scalar(
                 select(CharacterAlias).where(
                     CharacterAlias.character_id == character.id,
@@ -348,7 +392,7 @@ class AtlasPipeline:
         version = snapshot.upstream_hash or snapshot.content_sha256[:12]
         with self.session.begin_nested():
             for row in raw:
-                self._upsert_character(row, version)
+                self._upsert_character(row, version, snapshot.fetched_at)
             snapshot.published = True
         self.session.commit()
         return len(raw)

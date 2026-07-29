@@ -17,6 +17,25 @@ class CharacterSummary(BaseModel):
     rarity: int
     class_name: str
     aliases: list[str] = Field(default_factory=list)
+    source: str
+    source_version: str
+    fetched_at: datetime
+    match_type: Literal["exact_name", "exact_alias", "fuzzy"] = "exact_name"
+    confidence: float = Field(default=1.0, ge=0, le=1)
+    requires_selection: bool = False
+
+
+class DataSourceStatus(BaseModel):
+    source: str
+    region: str
+    version: str
+    server_hash: str | None = None
+    data_ver: int | None = None
+    fetched_at: datetime
+    source_url: str
+    character_count: int
+    material_count: int
+    snapshot_count: int
 
 
 class SkillCostItem(BaseModel):
@@ -141,4 +160,3 @@ class RagAnswer(BaseModel):
     answer: str
     citations: list[RagCitation]
     route: Literal["rag", "structured", "mixed"]
-

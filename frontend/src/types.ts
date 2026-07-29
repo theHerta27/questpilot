@@ -7,6 +7,25 @@ export interface Character {
   rarity: number;
   class_name: string;
   aliases: string[];
+  source: string;
+  source_version: string;
+  fetched_at: string;
+  match_type: "exact_name" | "exact_alias" | "fuzzy";
+  confidence: number;
+  requires_selection: boolean;
+}
+
+export interface DataSourceStatus {
+  source: string;
+  region: string;
+  version: string;
+  server_hash: string | null;
+  data_ver: number | null;
+  fetched_at: string;
+  source_url: string;
+  character_count: number;
+  material_count: number;
+  snapshot_count: number;
 }
 
 export interface SkillGoal {

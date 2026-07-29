@@ -7,7 +7,14 @@ from questpilot.agent_runtime import AgentRuntime
 from questpilot.domain_tools import build_tool_registry
 from questpilot.harness.context import ExecutionContext
 from questpilot.harness.events import InMemoryEventSink
-from questpilot.harness.gateway import FakeModel, ModelResponse, ModelToolCall
+from questpilot.harness.gateway import (
+    FakeModel,
+    ModelMessage,
+    ModelRequest,
+    ModelResponse,
+    ModelToolCall,
+    OpenAICompatibleGateway,
+)
 from questpilot.harness.tools import RetryPolicy, ToolRegistry, ToolSpec
 from questpilot.repositories import GameRepository
 from questpilot.services import GameService
@@ -54,6 +61,42 @@ async def test_fake_model_drives_complete_tool_call(seeded_session):
     assert "tool.completed" in [event.event_type for event in events]
 
 
+@pytest.mark.asyncio
+async def test_agent_stops_after_ambiguous_or_fuzzy_character_result(seeded_session):
+    gateway = FakeModel(
+        [
+            ModelResponse(
+                tool_calls=[
+                    ModelToolCall(
+                        id="call-search",
+                        name="search_character",
+                        arguments={"query": "阿尔托利雅"},
+                    ),
+                    ModelToolCall(
+                        id="call-materials",
+                        name="get_skill_materials",
+                        arguments={"character_id": 1},
+                    ),
+                ],
+                model="fake",
+            )
+        ]
+    )
+    sink = InMemoryEventSink()
+    context = ExecutionContext(event_sink=sink)
+    runtime = AgentRuntime(
+        gateway,
+        build_tool_registry(GameService(GameRepository(seeded_session))),
+    )
+    result = await runtime.run("阿尔托利雅的材料", context)
+    assert [item["name"] for item in result.tool_results] == ["search_character"]
+    assert "请明确选择" in result.answer
+    assert any(
+        event.status == "requires_selection"
+        for event in sink.events_for(context.run_id)
+    )
+
+
 def test_registry_rejects_duplicates_and_invalid_input():
     registry = ToolRegistry()
     spec = ToolSpec(
@@ -69,6 +112,37 @@ def test_registry_rejects_duplicates_and_invalid_input():
         NumberInput(value=-1)
     with pytest.raises(KeyError):
         registry.get("missing")
+
+
+def test_deepseek_payload_explicitly_disables_thinking_and_preserves_tool_calls():
+    gateway = OpenAICompatibleGateway(
+        base_url="https://api.deepseek.com",
+        api_key="test-only-placeholder",
+        model="deepseek-v4-flash",
+        thinking_enabled=False,
+    )
+    payload = gateway.build_payload(
+        ModelRequest(
+            messages=[
+                ModelMessage(
+                    role="assistant",
+                    tool_calls=[
+                        {
+                            "id": "call-1",
+                            "type": "function",
+                            "function": {
+                                "name": "search_character",
+                                "arguments": '{"query":"杰森"}',
+                            },
+                        }
+                    ],
+                )
+            ]
+        )
+    )
+    assert payload["model"] == "deepseek-v4-flash"
+    assert payload["thinking"] == {"type": "disabled"}
+    assert payload["messages"][0]["tool_calls"][0]["function"]["name"] == "search_character"
 
 
 @pytest.mark.asyncio

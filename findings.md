@@ -45,6 +45,18 @@
 - 后端 `127.0.0.1:8000` 正常监听。
 - `.env`、`.uv-cache`、虚拟环境、数据库、前端构建物和生成报告均处于 Git ignored 状态。
 - 基线前补充忽略 `.env.*`（保留 `.env.example`）、`*.log`、`*.pid` 与通用缓存目录。
+- DeepSeek 官方文档确认 OpenAI 兼容 base URL 为 `https://api.deepseek.com`，当前模型 ID
+  为 `deepseek-v4-flash`；模型支持 Tool Calls。
+- DeepSeek V4 默认开启 thinking；第一阶段必须在请求体显式发送
+  `{"thinking":{"type":"disabled"}}`。非 thinking 模式可直接使用现有工具调用循环。
+- 基线锚点为提交 `22cf03c`、标签 `m1-generated-baseline`。
+- Atlas 当前 CN 角色详情的 `skillMaterials` 是按起始等级 `1`–`9` 编号、三个主动技能共用的升级表；不是按技能号分组。
+- 固定种子 `20260729` 抽取 No.254 伊阿宋、No.262 Archer 刑部姬、No.324 雅克·德·莫莱，逐级技能材料与公开资料一致。
+- Atlas 本次版本为 `ec2a23` / `serverHash 6a6f74` / `dataVer 966`，材料表发布 1,870 条记录。
+- 精确别名必须优先于其他角色的模糊相似结果；否则“弓刑部”会同时召回 Assassin 刑部姬并误触发歧义护栏。
+- Agent 对模糊或同名搜索结果采用确定性中止：即使模型同轮请求后续工具，也只执行角色搜索并要求用户选择。
+- DeepSeek 正式冒烟 12/12 通过，thinking disabled；154 个统一事件，平均单任务约 5.8 秒。
+- `UseShellExecute=true` 可让前后端长期进程脱离调用命令输出句柄，解决脚本完成但外层一直显示 Running 的问题。
 
 ## 视觉方向
 - 产品：游戏资源规划与 Agent 执行追踪工作台。

@@ -37,6 +37,34 @@ def test_atlas_skill_material_adapter_handles_level_rows():
     ]
 
 
+def test_atlas_skill_material_adapter_handles_current_shared_skill_table():
+    raw = {
+        "skillMaterials": {
+            "1": {
+                "items": [{"item": {"id": 6001, "name": "剑之辉石"}, "amount": 5}],
+                "qp": 200000,
+            },
+            "2": {
+                "items": [{"item": {"id": 6001, "name": "剑之辉石"}, "amount": 12}],
+                "qp": 400000,
+            },
+        }
+    }
+    rows = AtlasAdapter.skill_cost_rows(raw)
+    assert len(rows) == 6
+    assert rows[0] == {
+        "skill_number": 1,
+        "from_level": 1,
+        "to_level": 2,
+        "material_game_id": 6001,
+        "amount": 5,
+    }
+    assert rows[2]["skill_number"] == 3
+    assert rows[3]["skill_number"] == 1
+    assert rows[3]["from_level"] == 2
+    assert rows[3]["to_level"] == 3
+
+
 def test_drop_sparse_matrix_preserves_indexes_and_samples():
     raw = {
         "domusVer": "test-1",

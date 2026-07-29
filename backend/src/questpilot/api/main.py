@@ -33,6 +33,7 @@ from questpilot.schemas import (
     AgentQueryRequest,
     AgentQueryResponse,
     CharacterSummary,
+    DataSourceStatus,
     InventoryItemView,
     InventoryReplaceRequest,
     MaterialGapRequest,
@@ -169,6 +170,14 @@ def characters(
     return service(session).search_characters(query, limit)
 
 
+@app.get("/api/v1/data/status", response_model=DataSourceStatus)
+def data_status(session: SessionDep) -> DataSourceStatus:
+    status = service(session).data_source_status()
+    if not status:
+        raise HTTPException(status_code=404, detail="no published Atlas CN snapshot")
+    return status
+
+
 @app.get("/api/v1/characters/{character_id}/skill-costs", response_model=list[SkillCostItem])
 def skill_costs(
     character_id: int, session: SessionDep
@@ -209,6 +218,7 @@ async def agent_query(
             base_url=settings.model_base_url,
             api_key=settings.model_api_key,
             model=settings.model_name,
+            thinking_enabled=settings.model_thinking_enabled,
         )
         if settings.model_provider != "fake" and settings.model_api_key
         else FakeModel()
