@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+.uv-cache/
+dist/
+build/
+*.egg-info/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
+frontend/questpilot-ui.png
+
+# Runtime and secrets
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.pid
+logs/
+**/logs/
+.cache/
+**/.cache/
+data/cache/
+data/snapshots/
+data/community/
+**/data/cache/
+**/data/snapshots/
+**/data/community/
+reports/generated/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

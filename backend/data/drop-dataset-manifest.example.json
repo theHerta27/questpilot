@@ -1,0 +1,9 @@
+{
+  "source_url": "https://github.com/chaldea-center/chaldea-data/blob/main/dist/dropData.json",
+  "upstream_commit": "PIN_A_REAL_COMMIT_BEFORE_IMPORT",
+  "domus_version": "PIN_DOMUS_VERSION",
+  "content_sha256": "PIN_SHA256",
+  "generated_at": "2026-07-29T00:00:00Z",
+  "minimum_sample_runs": 100,
+  "allowed_quest_ids": []
+}
