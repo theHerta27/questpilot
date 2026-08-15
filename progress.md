@@ -26,6 +26,12 @@
 - 用户已于 2026-08-15 明确回复“确认上传”，并要求暂不添加 License。
 - 管理员用户上下文的 GitHub CLI 已成功登录 `theHerta27`，Git 协议为 HTTPS，权限包含 `repo` 与 `workflow`；隔离身份看到的旧失效凭据不用于发布。
 - `gh repo view theHerta27/questpilot` 确认目标仓库尚不存在，因此后续将创建新的 Public Repository，不存在覆盖远程历史的风险。
+- 创建发布整理提交 `38e789a`（`chore: 整理 GitHub 发布内容`），并将本地分支由 `master` 重命名为 `main`。
+- 创建 Public Repository `https://github.com/theHerta27/questpilot`，设置 `origin` 并推送完整 4 个提交及 `m1-generated-baseline`、`m1-accepted` 标签。
+- GitHub 元数据验收：默认分支 `main`、英文 Description 正确、10 个 Topics 正确、远程 114 个 Blob、禁止上传路径 0。
+- README 验收：GitHub 页面可公开访问，标题、Description 与 Quick Start 可见，2 个 Mermaid 区块已实际渲染；README 不引用远程图片，本地许可图片缓存未上传。
+- 初始发布 SHA 本地/远程一致：`38e789a677806138071de92174250e3d057d18fb`；两个因分支/标签 Push 触发的 GitHub Actions CI 均成功。
+- 用户选择暂不添加 License；README 已明确说明公开可读不等于授权复制或再分发。
 
 ## 会话：2026-07-29
 
@@ -130,6 +136,10 @@
 | 2026-08-15 | CI 模式下 Playwright 3 条用例再次全部执行完成，但 WebServer 输出句柄仍未关闭 | 2 | 确认与后端可用性无关，主动中断并清理所有临时 Node/Python 和 5173/8000 监听；不做第三次重复运行，沿用已逐条通过的断言结果并在发布报告披露 teardown 问题 |
 | 2026-08-15 | 读取测试进程命令行时 `Get-CimInstance Win32_Process` 被系统拒绝访问 | 1 | 改用 `Get-Process` 与端口监听检查，确认临时进程已清理 |
 | 2026-08-15 | GitHub 网页/API 只读存在性检查未返回可验证结果 | 2 | 不猜测仓库是否存在；待 `gh auth login` 后先执行 `gh repo view theHerta27/questpilot`，再决定创建或复用空仓库 |
+| 2026-08-15 | `gh repo create --source .` 在管理员身份下因 Git 所有权隔离未识别本地仓库 | 1 | 分离操作：先用 `gh repo create` 创建空远程，再以临时 `safe.directory` 设置 remote 和 Push |
+| 2026-08-15 | 首次远程验收未给 Git 子命令传入 `safe.directory`，并把 `.env.example` 误计为禁止路径 | 1 | 废弃该次 SHA/路径结论；显式排除 `.env.example` 并使用 GitHub API复核，禁止路径为 0 |
+| 2026-08-15 | `git ls-remote` 验收时一次 GitHub 443 连接失败 | 1 | 改用已认证的 GitHub Commit API核对远程 SHA，结果与本地完全一致 |
+| 2026-08-15 | GitHub 页面第一次浏览器加载超时 | 1 | 恢复浏览器连接后轻量重试成功，页面内容和 Mermaid 渲染通过 |
 | 2026-07-29 | PowerShell 将带嵌套 f-string 的 `python -c` 误解析为 ScriptBlock | 1 | 不再使用多层内联引号；改用既有 pytest/CLI 入口逐条执行 |
 | 2026-07-29 | GitHub 匿名 REST API 触发共享出口限流 | 1 | 改用 `git ls-remote` 与浅层稀疏检出核验固定提交和仓库文件 |
 | 2026-07-29 | Ruff 扫描整个迁移目录时发现两个既有迁移的导入顺序问题 | 1 | 修正本次 0003；本阶段只对新增迁移与既有 `src/tests` 执行静态检查，避免扩大无关范围 |

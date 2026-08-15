@@ -4,7 +4,7 @@
 交付一个可运行、可测试、可演示的复杂养成游戏规划 Agent：M1 完成确定性材料闭环，M3 完成受约束的局部资源规划，M5 完成 Replay、评测与可观测性，M6 提供 MCP 与通用适配示例。
 
 ## 当前阶段
-GitHub 公开发布整理：R3 publishing。用户已明确回复“确认上传”，GitHub CLI 管理员上下文认证有效；保留无 License 状态，开始提交、建仓、Push 与远程验收。
+GitHub 公开发布整理：complete。项目已发布到 `https://github.com/theHerta27/questpilot`，默认分支 `main`，保留无 License 状态；远程文件、README、Mermaid、标签、元数据、安全边界和 CI 均已验收。
 
 ## 当前批准阶段：GitHub 公开发布整理
 
@@ -29,11 +29,11 @@ GitHub 公开发布整理：R3 publishing。用户已明确回复“确认上传
 - **状态：** complete
 
 ### R3：用户确认后的 GitHub 发布
-- [ ] 创建整理提交
-- [ ] 创建 `theHerta27/questpilot` Public Repository
-- [ ] 设置 remote、推送真实历史、配置 Description 与 Topics
-- [ ] 完成远程 README、默认分支、文件与敏感信息验收
-- **状态：** in_progress
+- [x] 创建整理提交
+- [x] 创建 `theHerta27/questpilot` Public Repository
+- [x] 设置 remote、推送真实历史、配置 Description 与 Topics
+- [x] 完成远程 README、默认分支、文件与敏感信息验收
+- **状态：** complete
 
 ## 已完成阶段：可运行性与 M1 验收加固
 

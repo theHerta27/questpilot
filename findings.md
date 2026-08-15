@@ -15,6 +15,8 @@
 - 推荐 Topics：`python`、`fastapi`、`react`、`typescript`、`ai-agent`、`llm`、`langgraph`、`postgresql`、`tool-calling`、`software-engineering`。
 - 目标仓库存在性在认证失效状态下无法可靠确认；发布操作必须先 `gh repo view`，若存在则检查所有者和内容，若不存在才创建，禁止覆盖远程历史。
 - 用户完成 CLI 登录后，管理员上下文确认 `theHerta27/questpilot` 尚不存在；可在保存本地整理提交后安全创建新的 Public Repository。
+- GitHub 发布完成：仓库为 Public、默认分支 `main`、114 个远程文件、2 个历史标签、10 个 Topics；README 两个 Mermaid 图在 GitHub 页面正常渲染。
+- GitHub Actions 对发布提交及补推标签触发的历史提交均返回 success；远程未包含 `.env`、数据库、缓存、日志、社区原始数据或本地图片缓存。
 
 ## 2026-07-29：真实社区掉落率 P1
 
