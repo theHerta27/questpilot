@@ -4,7 +4,36 @@
 交付一个可运行、可测试、可演示的复杂养成游戏规划 Agent：M1 完成确定性材料闭环，M3 完成受约束的局部资源规划，M5 完成 Replay、评测与可观测性，M6 提供 MCP 与通用适配示例。
 
 ## 当前阶段
-真实社区掉落率与受约束规划：P6 complete / paused_for_review。P0–P6 已连续完成，等待下一轮评审。
+GitHub 公开发布整理：R3 publishing。用户已明确回复“确认上传”，GitHub CLI 管理员上下文认证有效；保留无 License 状态，开始提交、建仓、Push 与远程验收。
+
+## 当前批准阶段：GitHub 公开发布整理
+
+### R0：只读项目与历史审计
+- [x] 检查目录、技术栈、功能、启动、测试和文档
+- [x] 检查 Git 分支、标签、提交历史、作者信息和远程状态
+- [x] 扫描所有可达提交中的密钥、私人地址、本机路径和 `.env` 历史
+- [x] 核验本地 `.env`、日志、缓存、数据库和生成物均被忽略
+- **状态：** complete
+
+### R1：轻量发布整理
+- [x] 在原 README 基础上补充背景、架构、工程设计、目录和边界
+- [x] 完善 `.gitignore`，不改变源码和运行方式
+- [x] 准备英文 Description 和 6–10 个 Topics
+- **状态：** complete
+
+### R2：发布前验证与暂停门
+- [x] 执行后端静态检查/测试、前端单测/构建/E2E
+- [x] 复查最终 Git 状态、diff、安全边界与认证状态
+- [x] 输出 A–P 汇总和拟执行命令后暂停
+- [x] 等待用户明确回复“确认上传”
+- **状态：** complete
+
+### R3：用户确认后的 GitHub 发布
+- [ ] 创建整理提交
+- [ ] 创建 `theHerta27/questpilot` Public Repository
+- [ ] 设置 remote、推送真实历史、配置 Description 与 Topics
+- [ ] 完成远程 README、默认分支、文件与敏感信息验收
+- **状态：** in_progress
 
 ## 已完成阶段：可运行性与 M1 验收加固
 
@@ -224,6 +253,8 @@
 | `Start-Process` 合并 Path/PATH 时键冲突 | 2 | 放弃 `Start-Process`，改用 .NET `ProcessStartInfo` |
 | 长期子进程继承调用命令输出句柄，外层一直显示 Running | 2 | 使用 `UseShellExecute=true` 脱离输出句柄，并分离启动与健康检查 |
 | DeepSeek 冒烟 JSON 根数组被 PowerShell 5.1 包成单项 | 1 | 显式遍历展开并在联网前校验任务数为 10–20 |
+| GitHub 发布验收时 Playwright teardown 未退出 | 1 | 用例已逐条通过；主动清理后改用 CI 模式与精简 reporter 获取明确退出码 |
+| CI 模式下 Playwright WebServer teardown 仍未退出 | 2 | 不进行第三次重复；确认断言 3/3 通过并清理全部临时进程，在发布前报告中披露未取得干净退出码 |
 
 ## 完成标准
 - 不是仅有接口和空目录；每个里程碑必须具备可运行实现与测试。

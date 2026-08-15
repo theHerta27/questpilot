@@ -1,5 +1,21 @@
 # 发现与决策
 
+## 2026-08-15：GitHub 公开发布审计
+
+- 仓库已有 3 个真实提交：`22cf03c`、`8547b15`、`8ba7a83`；必须原样保留，不重写历史。
+- 当前分支为 `master`，无 remote；目标为 `theHerta27/questpilot` Public Repository。
+- 作者邮箱 `questpilot@local` 为项目占位地址，不暴露私人邮箱，无需重写提交 SHA。
+- 可达历史、文件名与 DOCX 内容均未发现真实密钥、本机路径、私人服务器或 `.env` 提交记录。
+- Docker Compose 中的 `questpilot` / `questpilot-demo-only` 是公开演示凭据；真实 DeepSeek 密钥只存在于 ignored `.env`。
+- `.env`、数据库、日志、运行 PID、依赖、构建物、社区原始数据、许可图片缓存和生成报告均处于忽略边界。
+- 当前 README 功能陈述基本准确，但缺少招聘导向的项目背景、工程设计、核心流程、目录结构和清晰的已实现/未实现边界。
+- GitHub CLI 认证失效；最终发布前需用户通过交互式 `gh auth login -h github.com` 重新认证，不能要求或接收明文 Token。
+- 仓库无 LICENSE；公开可见不等于授权复用，许可证必须由用户决定。
+- 发布元数据建议使用英文 Description：`A verifiable planning agent with deterministic tools, versioned data, constrained optimization, and end-to-end traces.`
+- 推荐 Topics：`python`、`fastapi`、`react`、`typescript`、`ai-agent`、`llm`、`langgraph`、`postgresql`、`tool-calling`、`software-engineering`。
+- 目标仓库存在性在认证失效状态下无法可靠确认；发布操作必须先 `gh repo view`，若存在则检查所有者和内容，若不存在才创建，禁止覆盖远程历史。
+- 用户完成 CLI 登录后，管理员上下文确认 `theHerta27/questpilot` 尚不存在；可在保存本地整理提交后安全创建新的 Public Repository。
+
 ## 2026-07-29：真实社区掉落率 P1
 
 - `chaldea-data` 主分支固定提交为 `1d18e73b5b970fcf193335f29c645f654a142c69`，提交时间 `2026-07-29T15:01:19Z`。

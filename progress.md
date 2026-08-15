@@ -1,5 +1,32 @@
 # 进度日志
 
+## 会话：2026-08-15
+
+### GitHub 公开发布整理
+- **状态：** R1 in_progress
+- 已完整读取用户的 GitHub 发布要求；确认项目名 `QuestPilot`、目标仓库名 `questpilot`、可见性 Public。本地绝对路径只在对话汇总中提供，不写入待发布文件。
+- 只读盘点确认：当前 `master` 分支、3 个真实提交、2 个里程碑标签、114 个跟踪文件、尚无 remote，工作树初始干净。
+- Git 作者为 `QuestPilot Builder <questpilot@local>`，不是私人邮箱。
+- 全部 3 个可达提交未发现高置信度密钥、私钥、私人网络地址、本机绝对路径或 `.env` 历史；无不可达对象。
+- 本地真实模型密钥只存在于被忽略的 `.env`；数据库、日志、缓存、社区原始数据、图片缓存、报告和前端构建物均已验证被 `.gitignore` 排除。
+- Word 规划文档无作者/最后修改者元数据，未发现密钥、本机路径或用户名。
+- GitHub CLI 已安装并识别账号 `theHerta27`，但现有认证已失效；Git credential helper 为 Windows Credential Manager。
+- 当前仓库没有 `LICENSE`；不擅自替用户选择许可证。
+- 本阶段仅优化 README 和 `.gitignore`，不修改业务代码，不改变目录结构和运行方式。
+- 第一次 README 补丁未应用：`apply_patch` 不允许同一补丁同时删除并新增同一路径；改为分离的原子操作，未造成文件变更。
+- README 已补充项目背景、核心能力、两张 Mermaid 图、技术栈、工程设计、目录、Quick Start、测试、数据许可和 Future Work。
+- `.gitignore` 已补充覆盖率/测试缓存、临时文件和常见本地模型权重规则；未新增业务依赖或忽略源码。
+- Repository Description 候选：`A verifiable planning agent with deterministic tools, versioned data, constrained optimization, and end-to-end traces.`
+- Topics 候选：`python`、`fastapi`、`react`、`typescript`、`ai-agent`、`llm`、`langgraph`、`postgresql`、`tool-calling`、`software-engineering`。
+- 发布前验证：Ruff 通过；后端 52 通过/1 个在线 Atlas 契约默认跳过；材料缺口评测 50/50；前端 Vitest 6/6；生产构建通过。
+- Playwright 3 条 E2E 断言两次均全部完成，但当前 Windows 工具通道下 WebServer teardown 两次未返回；临时进程与端口已彻底清理，未第三次重复。
+- 最终候选扫描：114 个文件，0 个高置信度密钥、0 个本机路径/用户名、0 个禁止上传文件；README 7 个相对链接全部存在，Markdown 围栏平衡，`git diff --check` 通过。
+- 当前只修改 `.gitignore`、`README.md`、`task_plan.md`、`progress.md`、`findings.md`，均未暂存；业务代码修改为 0。
+- R2 已完成并暂停。等待用户明确回复“确认上传”；上传前还需通过交互式 GitHub CLI 登录恢复认证。
+- 用户已于 2026-08-15 明确回复“确认上传”，并要求暂不添加 License。
+- 管理员用户上下文的 GitHub CLI 已成功登录 `theHerta27`，Git 协议为 HTTPS，权限包含 `repo` 与 `workflow`；隔离身份看到的旧失效凭据不用于发布。
+- `gh repo view theHerta27/questpilot` 确认目标仓库尚不存在，因此后续将创建新的 Public Repository，不存在覆盖远程历史的风险。
+
 ## 会话：2026-07-29
 
 ### 真实社区掉落率与受约束规划
@@ -99,6 +126,10 @@
 ## 错误日志
 | 时间戳 | 错误 | 尝试次数 | 解决方案 |
 |--------|------|---------|---------|
+| 2026-08-15 | Playwright 3 条用例逐条通过后，临时 Vite 服务 teardown 未返回最终退出码 | 1 | 约 50 秒无新输出后主动中断，确认无残留 Node/5173 进程；改用 CI 模式与精简 reporter 重新验证 |
+| 2026-08-15 | CI 模式下 Playwright 3 条用例再次全部执行完成，但 WebServer 输出句柄仍未关闭 | 2 | 确认与后端可用性无关，主动中断并清理所有临时 Node/Python 和 5173/8000 监听；不做第三次重复运行，沿用已逐条通过的断言结果并在发布报告披露 teardown 问题 |
+| 2026-08-15 | 读取测试进程命令行时 `Get-CimInstance Win32_Process` 被系统拒绝访问 | 1 | 改用 `Get-Process` 与端口监听检查，确认临时进程已清理 |
+| 2026-08-15 | GitHub 网页/API 只读存在性检查未返回可验证结果 | 2 | 不猜测仓库是否存在；待 `gh auth login` 后先执行 `gh repo view theHerta27/questpilot`，再决定创建或复用空仓库 |
 | 2026-07-29 | PowerShell 将带嵌套 f-string 的 `python -c` 误解析为 ScriptBlock | 1 | 不再使用多层内联引号；改用既有 pytest/CLI 入口逐条执行 |
 | 2026-07-29 | GitHub 匿名 REST API 触发共享出口限流 | 1 | 改用 `git ls-remote` 与浅层稀疏检出核验固定提交和仓库文件 |
 | 2026-07-29 | Ruff 扫描整个迁移目录时发现两个既有迁移的导入顺序问题 | 1 | 修正本次 0003；本阶段只对新增迁移与既有 `src/tests` 执行静态检查，避免扩大无关范围 |

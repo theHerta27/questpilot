@@ -4,7 +4,12 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.pyright/
+.hypothesis/
+.tox/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
 .venv/
 .uv-cache/
@@ -17,6 +22,7 @@ frontend/node_modules/
 frontend/dist/
 frontend/playwright-report/
 frontend/test-results/
+frontend/coverage/
 frontend/questpilot-ui.png
 frontend/*.tsbuildinfo
 frontend/vite.config.js
@@ -44,6 +50,19 @@ data/community/
 **/data/community/
 **/data/assets/
 reports/generated/
+
+# Local model weights and temporary files
+*.onnx
+*.safetensors
+*.gguf
+*.ckpt
+*.pt
+*.pth
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
 
 # Editors and OS
 .idea/
